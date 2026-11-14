@@ -261,6 +261,7 @@ class RestoreTest(unittest.TestCase):
         self.addCleanup(srv.shutdown)
         c.call("POST", "setup", {"password": "longenough1"})
         c.call("POST", "connect", {"path": "B"})
+        st.first_done = True
         self.assertEqual(c.call("POST", "persist", {"on": True})[0], 200)
         first = st._watch[1]
         st.stop_watcher()
@@ -278,6 +279,34 @@ class RestoreTest(unittest.TestCase):
                 break
             time.sleep(0.2)
         self.assertEqual(st2.phase, "HIJACKED")
+
+
+class EnsureConfigTest(unittest.TestCase):
+
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.d, True)
+        os.makedirs(self.d + "/.nebula/kalico")
+        os.makedirs(self.d + "/printer_data/config")
+        self.cfg = self.d + "/printer_data/config/printer.cfg"
+        with open(self.cfg, "w") as f:
+            f.write("[include machine/*.cfg]\n")
+        self.st = server.State(self.d + "/.nebula", backend.RealBackend(runner_factory=lambda a: None))
+
+    def test_the_factory_block_is_added_once_when_nothing_was_imported(self):
+        self.st.ensure_config()
+        self.st.ensure_config()
+        with open(self.cfg) as f:
+            text = f.read()
+        self.assertEqual(text.count("#*# <---------------------- SAVE_CONFIG"), 1)
+        self.assertIn("position_endstop", text)
+
+    def test_imported_tuning_means_no_factory_block(self):
+        with open(self.d + "/.nebula/kalico/calibration.cfg", "w") as f:
+            f.write("[stepper_z]\nposition_endstop: 5.6\n")
+        self.st.ensure_config()
+        with open(self.cfg) as f:
+            self.assertNotIn("#*# <---------------------- SAVE_CONFIG", f.read())
 
 
 class AddonsPanelTest(ServiceBase):
@@ -450,6 +479,12 @@ class WatcherWiringTest(unittest.TestCase):
         code, body = c.call("POST", "persist", {"on": True})
         self.assertEqual(code, 409)
         be.password = "pw"
+        self.assertEqual(c.call("POST", "persist", {"on": True})[0], 200)
+        time.sleep(1.5)
+        self.assertEqual(sb.log().count("klipper stop"), 0)
+        self.assertFalse(c.call("GET", "state")[1]["first_done"])
+        self.assertEqual(c.call("POST", "persist", {"on": False})[0], 200)
+        st.first_done = True
         self.assertEqual(c.call("POST", "persist", {"on": True})[0], 200)
         for _ in range(60):
             if c.call("GET", "state")[1]["phase"] == "HIJACKED":

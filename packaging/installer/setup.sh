@@ -21,10 +21,19 @@ warn() { WARNINGS+=("$*"); printf 'warning: %s\n' "$*" >&2; }
 die() { printf 'nebula-setup: %s\n' "$*" >&2; exit 1; }
 as_user() { runuser -u "$USER_NAME" -- "$@"; }
 quiet() {
-    local what=$1 log
+    local what=$1 log pid i=0 t0=$SECONDS frames='|/-\'
     shift
     log=$(mktemp)
-    if "$@" > "$log" 2>&1; then
+    "$@" > "$log" 2>&1 &
+    pid=$!
+    if [ -t 1 ]; then
+        while kill -0 "$pid" 2> /dev/null; do
+            printf '\r  %s %s (%ds)' "${frames:i++%4:1}" "$what" "$((SECONDS - t0))"
+            sleep 0.25
+        done
+        printf '\r\033[K'
+    fi
+    if wait "$pid"; then
         drop "$log"
     else
         tail -n 25 "$log" >&2
@@ -116,7 +125,7 @@ checkout() {
 
 venv() {
     local env=$HOME_DIR/$1-env
-    [ -x "$env/bin/python" ] || as_user python3 -m venv "$env"
+    [ -x "$env/bin/python" ] || quiet "creating the Python environment for $1" as_user python3 -m venv "$env"
     quiet "installing Python packages for $1" as_user "$env/bin/pip" install -q --disable-pip-version-check -r "$2"
 }
 
@@ -322,12 +331,24 @@ finish() {
     else
         warn "the panel did not answer within 30 seconds; look at: journalctl -u nebula-panel"
     fi
-    say "Open the panel:  http://${ip:-this-machine}:8080/nebula/"
-    say "To remove Nebula again:  sudo nebula-uninstall"
     for w in "${WARNINGS[@]+"${WARNINGS[@]}"}"; do say "note: $w"; done
-    if [ "$NEED_REBOOT" -eq 1 ]; then
-        say "One reboot is needed to switch on the USB cable port:  sudo reboot"
+    if [ "$UPDATING" -eq 1 ]; then
+        say "Open the panel:  http://${ip:-this-machine}:8080/nebula/"
+    else
+        local n=1
+        say
+        say "Next:"
+        if [ "$NEED_REBOOT" -eq 1 ]; then
+            say "  $n. Restart this machine, to switch on the USB cable port:  sudo reboot"
+            n=$((n + 1))
+        fi
+        say "  $n. Connect the USB cable between this machine and the printer, then switch the printer off and on once."
+        say "     The printer only sets up its end of the cable when it starts."
+        n=$((n + 1))
+        say "  $n. Open the panel:  http://${ip:-this-machine}:8080/nebula/"
     fi
+    say
+    say "To remove Nebula again:  sudo nebula-uninstall"
 }
 
 main() {

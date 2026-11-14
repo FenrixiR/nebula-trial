@@ -18,6 +18,9 @@ class Watcher:
     stack: object = None
     lock: object = None
     on_start: object = None
+    prepare: object = None
+    gate: object = None
+    _waiting: str = field(default="", init=False)
     delay: float = field(default=10.0, init=False)
 
     def __post_init__(self):
@@ -32,6 +35,13 @@ class Watcher:
             return "unreachable"
         if rc != 0 or "nebula-ok" not in out:
             return "unreachable"
+        why = self.gate() if self.gate else None
+        if why:
+            if why != self._waiting:
+                self.log(f"watcher: waiting: {why}")
+            self._waiting = why
+            return "busy"
+        self._waiting = ""
         with self.lock or contextlib.nullcontext():
             return self._look_and_hijack(r)
 
@@ -40,6 +50,8 @@ class Watcher:
             return "already"
         self.log("watcher: the printer is already taken over but Kalico is not running on this device, starting it")
         try:
+            if self.prepare:
+                self.prepare()
             self.stack.start(self.log)
         except engine.NebulaError as ex:
             self.log(f"watcher: starting Kalico failed: {ex}")
@@ -66,6 +78,8 @@ class Watcher:
             return "failed"
         if self.stack:
             try:
+                if self.prepare:
+                    self.prepare()
                 self.stack.start(self.log)
             except engine.NebulaError as ex:
                 self.log(f"watcher: starting Kalico failed: {ex}")

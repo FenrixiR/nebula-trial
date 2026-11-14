@@ -41,6 +41,7 @@ class State:
         self.log = []
         self.step = 0
         self.persist = False
+        self.first_done = False
         self.updater = updates.DemoUpdater() if backend.demo else updates.Updater(os.path.join(REPO, "VERSION"))
         self.cable_boot = None
         self.snapshot = {}
@@ -51,7 +52,7 @@ class State:
     def save(self):
         fd = os.open(self.settings_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         with os.fdopen(fd, "w") as f:
-            json.dump({"path": self.path, "address": self.address, "persist": self.persist}, f)
+            json.dump({"path": self.path, "address": self.address, "persist": self.persist, "first_done": self.first_done}, f)
 
     def restore(self, manifest):
         try:
@@ -60,6 +61,7 @@ class State:
         except (OSError, ValueError):
             return
         self.path, self.address = s.get("path"), s.get("address", "")
+        self.first_done = bool(s.get("first_done", s.get("persist", False)))
         if not self.path:
             return
         self.phase = "CONFIGURED"
@@ -82,7 +84,7 @@ class State:
         stop = threading.Event()
         w = Watcher(manifest, PAYLOAD, self.backend._runner, self.address, log=self.say,
                     base_delay=WATCH_DELAY, sleep=stop.wait, lock=self.work,
-                    stack=getattr(self.backend, "stack", None))
+                    stack=getattr(self.backend, "stack", None), prepare=self.ensure_config, gate=self.watch_gate)
 
         def on_result(result):
             if result in ("hijacked", "already"):
@@ -98,6 +100,18 @@ class State:
         t.start()
         self.say("automatic take-over on: watching for the printer")
         return True
+
+    def watch_gate(self):
+        if self.first_done:
+            return None
+        return "take the printer over once yourself first, so that you choose its tuning"
+
+    def printer_cfg(self):
+        return os.path.join(os.path.dirname(os.path.abspath(self.dir)), "printer_data", "config", "printer.cfg")
+
+    def ensure_config(self):
+        if not os.path.exists(os.path.join(self.dir, "kalico", "calibration.cfg")) and autosave.ensure_defaults(self.printer_cfg()):
+            self.say("factory calibration values added to printer.cfg; calibrate on the printer to replace them")
 
     def stop_watcher(self):
         w = getattr(self, "_watch", None)
@@ -403,7 +417,7 @@ def make_handler(state):
                     "paired": state.paired,
                     "path": state.path, "address": state.address, "phase": state.phase,
                     "printer_password": (getattr(state.backend, "password", None) or "") if self.authed() and not state.demo else "",
-                    "persist": state.persist, "cable_boot": state.cable_boot, "log": state.log[-40:], "host": host_facts(state.demo),
+                    "persist": state.persist, "first_done": state.first_done, "cable_boot": state.cable_boot, "log": state.log[-40:], "host": host_facts(state.demo),
                     "job": state.addons.job if state.addons else None}
 
         def frozen(self, what):
@@ -480,6 +494,8 @@ def make_handler(state):
                 state.say(f"take-over failed: {ex}")
                 return self.send(409, {"error": str(ex)})
             state.phase = "HIJACKED"
+            state.first_done = True
+            state.save()
             state.say("printer taken over; tuning: " + ("kept" if choice == "existing" else "tuned again"))
             self.send(200, self.public_state())
 

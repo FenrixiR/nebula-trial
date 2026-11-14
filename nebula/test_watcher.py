@@ -27,6 +27,29 @@ class WatcherTest(unittest.TestCase):
         self.assertEqual(self.w.tick(), "already")
         self.assertEqual(self.sb.log().count("klipper stop"), 1)
 
+    def test_a_closed_gate_keeps_the_watcher_from_touching_the_printer_and_says_why_once(self):
+        self.w.gate = lambda: "not yet"
+        self.assertEqual(self.w.tick(), "busy")
+        self.assertEqual(self.w.tick(), "busy")
+        self.assertEqual(self.logs.count("watcher: waiting: not yet"), 1)
+        self.assertNotIn("klipper stop", self.sb.log())
+        self.w.gate = lambda: None
+        self.assertEqual(self.w.tick(), "hijacked")
+
+    def test_the_printer_config_is_prepared_before_kalico_starts(self):
+        order = []
+
+        class Stack:
+            def start(self, log):
+                order.append("start")
+
+            def stop(self, log):
+                pass
+        self.w.stack = Stack()
+        self.w.prepare = lambda: order.append("prepare")
+        self.assertEqual(self.w.tick(), "hijacked")
+        self.assertEqual(order, ["prepare", "start"])
+
     def test_host_stack_is_started_after_a_hijack_and_a_failure_releases(self):
         class Stack:
             def __init__(self, fail=False):
