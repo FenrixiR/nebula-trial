@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+centauri-link/target/
+nebula/relay/
+nebula/screen/*.tar.gz
+dist/

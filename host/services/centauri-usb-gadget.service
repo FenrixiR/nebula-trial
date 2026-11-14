@@ -1,0 +1,15 @@
+[Unit]
+Description=USB Ethernet gadget for the Centauri cable link (the host USB device port)
+After=local-fs.target
+Before=dnsmasq.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/centauri-usb-gadget.sh start
+ExecStartPost=/sbin/ip addr replace 10.78.0.1/24 dev usb0
+ExecStartPost=/sbin/ip link set usb0 up
+ExecStop=/usr/local/sbin/centauri-usb-gadget.sh stop
+
+[Install]
+WantedBy=multi-user.target

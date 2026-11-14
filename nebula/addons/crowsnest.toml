@@ -1,0 +1,32 @@
+[addon]
+id = "crowsnest"
+title = "Crowsnest"
+description = "Lets you use cameras plugged into this device, such as a nozzle camera, and shows them in Mainsail or Fluidd next to the printer's own camera."
+category = "camera"
+version = "5.0.12"
+
+[needs]
+ram_mb = 60
+disk_mb = 40
+packages = ["ustreamer", "v4l-utils"]
+
+[needs.advice]
+"Zero" = "A Raspberry Pi Zero has only one USB data port and the printer cable uses it, so no camera can be plugged in. A board with a free USB port, such as a Raspberry Pi 3, 4 or 5, can use one."
+
+[download.crowsnest]
+url = "https://github.com/mainsail-crew/crowsnest/archive/refs/tags/v5.0.12.zip"
+sha256 = "2cc0910c352740a237b92bb2bb4b7cd3c3e479b5887c9d3ea935efbfd98bda36"
+dest = "/opt/nebula/crowsnest"
+strip = 1
+
+[files.unit]
+source = "nebula-crowsnest.service"
+sha256 = "e904b91443dae3d01532c5a8fe0fe985ac1e871c96a3efe79f752a5f8948337c"
+dest = "/etc/systemd/system/nebula-crowsnest.service"
+mode = "0644"
+
+[services]
+managed = ["nebula-crowsnest.service"]
+
+[remove]
+keeps = ["the camera list (cameras on this host stay listed but are not streamed)", "the ustreamer and v4l-utils packages"]

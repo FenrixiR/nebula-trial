@@ -1,0 +1,9 @@
+[Unit]
+Description=Save the clock every 5 minutes, so a power cut loses little
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

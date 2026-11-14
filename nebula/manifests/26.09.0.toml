@@ -1,0 +1,68 @@
+
+[cosmos]
+version = "26.09.0"
+
+[firmware]
+bed = "4c37a204e5c2ed31b979baba7fb4d32a587aa590-r11"
+toolhead = "4c37a204e5c2ed31b979baba7fb4d32a587aa590-r11"
+
+[stop]
+order = ["gui-switcher", "moonraker", "klipper"]
+
+[start]
+order = ["klipper", "moonraker", "gui-switcher"]
+
+[keep]
+scripts = ["networking", "dbus-1", "zram", "dropbear", "chronyd", "syslog", "ustreamer",
+           "klipper-firmware-bed", "klipper-firmware-toolhead", "klipper-firmware-canvas", "klipper-firmware-dsp"]
+
+[paths]
+root = "/user-resource/nebula"
+
+[files."nebula-ctl.sh"]
+source = "printer/nebula-ctl.sh"
+sha256 = "e6e398923e19a9d27558f5655faf02ec0f734fdcbd39d9e2c24fb482a44d38f7"
+mode = "0755"
+
+[files."nebula-boot.sh"]
+source = "printer/nebula-boot.sh"
+sha256 = "3824134f1b010d69f088efe96ce0ba2df1f194b835551b956b7f32bc6a65222d"
+mode = "0755"
+
+[files."udhcpc-address-only.sh"]
+source = "printer/udhcpc-address-only.sh"
+sha256 = "b50970b19f15c82269e55df4b333acc39d522fdb47041b9f470751083a91cb35"
+mode = "0755"
+
+[files."centauri-link"]
+source = "relay/centauri-link"
+sha256 = "0a53c3d57108cd4e8c3116e2c8307eefa2710294ea829df38e281387d9277a4e"
+mode = "0755"
+
+[files."screen-start.sh"]
+source = "printer/screen-start.sh"
+sha256 = "e4fcbe31ae11b4fb30c0f9c19c907669ee7b80a9ab6f1cdc67d72d481090bf4d"
+mode = "0755"
+
+[files."helixscreen-cc1.tgz"]
+source = "screen/helixscreen-cc1-v1.0.6.tar.gz"
+sha256 = "b528186fb9aceb938b7786c7aba3d3287b2895c5cbe41bc626592f467cbd5fcf"
+mode = "0644"
+extract = "."
+
+[files."helixscreen/config/settings.json"]
+source = "screen/settings.json"
+sha256 = "d4976721970b68866eee76982f868378a437fa3be2090655f76449706e0c50b9"
+mode = "0644"
+
+[launch]
+relay = "{root}/centauri-link serve --allow {host_addr} mainboard=/dev/ttyRPMSG0@7001 bed=/dev/ttyS4:250000@7002 toolhead=/dev/serial/by-path/platform-4101400.usb-usb-0:1:1.0@7003"
+host_addr = "10.78.0.1"
+watchdog_minutes = 10
+
+[expect]
+ports = [7001, 7002, 7003]
+
+[screen]
+command = "{root}/screen-start.sh {host_addr}"
+kill = ["helix-watchdog", "helix-launcher", "helix-screen"]

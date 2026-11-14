@@ -1,0 +1,12 @@
+[Unit]
+Description=Nebula link doctor (rebind the USB gadget when the printer drops off the bus)
+After=centauri-usb-gadget.service
+Requires=centauri-usb-gadget.service
+
+[Service]
+ExecStart=/usr/local/sbin/nebula-linkdoctor.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

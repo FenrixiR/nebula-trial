@@ -1,0 +1,15 @@
+[package]
+name = "centauri-link"
+version = "0.2.0"
+edition = "2021"
+description = "Byte relay between a serial-like device (UART, USB CDC, rpmsg tty) and TCP, for running Klipper on another machine"
+
+[dependencies]
+libc = "0.2"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

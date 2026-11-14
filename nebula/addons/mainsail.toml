@@ -1,0 +1,38 @@
+[addon]
+id = "mainsail"
+title = "Mainsail"
+description = "A polished, popular dashboard for your printer. Opens in any browser on your home network."
+category = "web-interface"
+group = "web-interface"
+recommended = true
+version = "2.19.0"
+
+[needs]
+ram_mb = 20
+disk_mb = 60
+packages = ["nginx"]
+
+[download.mainsail]
+url = "https://github.com/mainsail-crew/mainsail/releases/download/v2.19.0/mainsail.zip"
+sha256 = "c4d9d96f89851c6ae0709c2f20725447f3fe8c57cf193869b0083441bd93378a"
+dest = "/var/www/mainsail"
+
+[files.site]
+source = "nebula-mainsail.conf"
+sha256 = "51751738eeeb3b55be2fe52289d6ac433b58f53b8ced80c72571a1f6e26d3824"
+dest = "/etc/nginx/sites-enabled/nebula-mainsail.conf"
+mode = "0644"
+
+[services]
+reload = ["nginx"]
+
+[displace]
+paths = ["/etc/nginx/sites-enabled/default"]
+
+[check]
+test = ["nginx", "-t"]
+url = "http://127.0.0.1/"
+status = 200
+
+[remove]
+keeps = ["Moonraker settings, history and users", "the nginx package"]

@@ -1,0 +1,26 @@
+[Unit]
+Description=Nebula camera streams (Crowsnest)
+After=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+SupplementaryGroups=video
+WorkingDirectory=/opt/nebula/crowsnest
+ExecStart=/usr/bin/python3 -m crowsnest -c /etc/nebula/crowsnest.conf -l /var/log/nebula-crowsnest/crowsnest.log -s 5
+LogsDirectory=nebula-crowsnest
+Restart=on-failure
+RestartSec=30
+StartLimitBurst=3
+StartLimitIntervalSec=180
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+MemoryMax=150M
+
+[Install]
+WantedBy=multi-user.target

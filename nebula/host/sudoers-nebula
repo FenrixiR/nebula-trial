@@ -1,0 +1,2 @@
+nebula ALL=(root) NOPASSWD: /usr/bin/systemctl start nebula-relay-client, /usr/bin/systemctl start nebula-kalico, /usr/bin/systemctl start nebula-moonraker, /usr/bin/systemctl stop nebula-relay-client, /usr/bin/systemctl stop nebula-kalico, /usr/bin/systemctl stop nebula-moonraker, /usr/bin/systemctl is-active nebula-relay-client, /usr/bin/systemctl is-active nebula-kalico, /usr/bin/systemctl is-active nebula-moonraker
+nebula ALL=(root) NOPASSWD: /usr/local/sbin/nebula-update --update --yes

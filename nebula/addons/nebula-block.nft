@@ -1,0 +1,23 @@
+
+table inet nebula_block
+delete table inet nebula_block
+
+table inet nebula_block {
+    set lan4 {
+        type ipv4_addr
+        flags interval
+        elements = { 0.0.0.0/32, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16 }
+    }
+    set lan6 {
+        type ipv6_addr
+        flags interval
+        elements = { ::/128, ::1/128, fc00::/7, fe80::/10 }
+    }
+    chain input {
+        type filter hook input priority -10; policy accept;
+        ct state established,related accept
+        ip saddr @lan4 accept
+        ip6 saddr @lan6 accept
+        counter drop comment "from the internet"
+    }
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Nebula: Kalico (klippy) for the hijacked printer
+After=nebula-relay-client.service
+Requires=nebula-relay-client.service
+
+[Service]
+User=nebula
+ExecStart=/home/nebula/klippy-env/bin/python /home/nebula/kalico/klippy/klippy.py /home/nebula/printer_data/config/printer.cfg -l /home/nebula/printer_data/logs/klippy.log -a /home/nebula/printer_data/comms/klippy.sock
+Restart=on-failure
+RestartSec=5

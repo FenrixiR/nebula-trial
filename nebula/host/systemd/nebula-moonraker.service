@@ -1,0 +1,9 @@
+[Unit]
+Description=Nebula: Moonraker API for the hijacked printer
+After=nebula-kalico.service
+
+[Service]
+User=nebula
+ExecStart=/home/nebula/moonraker-env/bin/python /home/nebula/moonraker/moonraker/moonraker.py -d /home/nebula/printer_data
+Restart=on-failure
+RestartSec=5

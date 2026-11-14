@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nebula</title>
+<style>
+:root{--bg:#f4f5fb;--panel:#fff;--line:#dfe2f0;--fg:#171a2e;--muted:#5d6486;--accent:#4b5fd6;--accent-fg:#fff;--ok:#12805a;--warn:#9a6700;--bad:#c4263d;--chip:#e9ecfa;--glow:rgba(75,95,214,.12)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b0e1d;--panel:#131833;--line:#252c52;--fg:#e8ebf8;--muted:#8d96ba;--accent:#8aa2ff;--accent-fg:#0b0e1d;--ok:#46d39a;--warn:#f2bd4b;--bad:#ff7487;--chip:#1c2347;--glow:rgba(138,162,255,.14);color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0b0e1d;--panel:#131833;--line:#252c52;--fg:#e8ebf8;--muted:#8d96ba;--accent:#8aa2ff;--accent-fg:#0b0e1d;--ok:#46d39a;--warn:#f2bd4b;--bad:#ff7487;--chip:#1c2347;--glow:rgba(138,162,255,.14);color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-inline:16px}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 48px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:6px 18px}
+.mark{font-weight:700;font-size:22px;letter-spacing:.04em}
+.mark i{font-style:normal;color:var(--accent)}
+.sp{flex:1}
+.chip{background:var(--chip);color:var(--muted);border-radius:999px;padding:3px 11px;font-size:12.5px;white-space:nowrap}
+.chip.live{color:var(--ok)} .chip.demo{color:var(--warn)}
+.steps{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.steps button{flex:1 1 120px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:8px 10px;text-align:left;font:inherit;cursor:pointer}
+.steps button b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.steps button.on{border-color:var(--accent);color:var(--fg);background:var(--glow)}
+.steps button.done b{color:var(--ok)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+h2{margin:0 0 4px;font-size:18px} h3{margin:18px 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+p{margin:6px 0} .muted{color:var(--muted)} .small{font-size:13px}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-block:14px}
+.choice{border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;background:transparent;color:inherit;text-align:left;font:inherit}
+.choice.on{border-color:var(--accent);background:var(--glow)} .choice b{display:block;margin-bottom:2px}
+input[type=text],input[type=password]{width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;margin-top:8px}
+button.primary{background:var(--accent);color:var(--accent-fg);border:0;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
+button.primary:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:9px 16px;font:inherit;cursor:pointer}
+button.danger{background:transparent;color:var(--bad);border:1px solid var(--bad);border-radius:10px;padding:9px 16px;font:inherit;cursor:pointer}
+.row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.dot{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:1px}
+.dot.ok{background:color-mix(in srgb,var(--ok) 22%,transparent);color:var(--ok)}
+.dot.bad{background:color-mix(in srgb,var(--bad) 22%,transparent);color:var(--bad)}
+.row .t{flex:1;min-width:0} .row .t b{display:block} .row .t span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.note{border-left:3px solid var(--warn);padding:8px 12px;background:var(--glow);border-radius:0 8px 8px 0;margin-block:12px}
+.note.bad{border-color:var(--bad)} .note.ok{border-color:var(--ok)}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center}
+ol.plan{margin:8px 0;padding-left:20px;color:var(--muted);font-size:13.5px} ol.plan li{margin-block:3px}
+label.opt{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-top:8px;cursor:pointer}
+label.opt.off{opacity:.5;cursor:not-allowed}
+.log{font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);max-height:180px;overflow:auto}
+.log div span{color:var(--accent);margin-right:8px}
+.demo-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-bottom:14px}
+.demo-bar button{border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:3px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+.demo-bar button.on{border-color:var(--warn);color:var(--warn)}
+.row .t b .tip{color:inherit;font-size:inherit}
+.tip{border-bottom:1px dotted var(--muted);cursor:help;position:relative}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:0;top:1.6em;z-index:5;width:max-content;max-width:min(280px,80vw);background:var(--fg);color:var(--bg);padding:7px 10px;border-radius:8px;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;line-height:1.4;white-space:normal}
+details.more{margin-top:6px} details.more summary{cursor:pointer;color:var(--accent);font-size:13px} details.more p{margin:6px 0 0}
+code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:13px}
+.err{color:var(--bad);margin-top:8px;min-height:1.2em}
+.steps button.extra{flex:0 0 auto;min-width:120px}
+a.ghost{display:inline-block;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:9px 16px}
+.row button{flex:none}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api = async (path, body) => {
+  const r = await fetch("/nebula/api/" + path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.error || r.statusText), {data: j, status: r.status});
+  return j;
+};
+let S = null, step = (+(location.hash.match(/step=(\d)/) || [])[1] || 0), checks = null, cal = null, plan = null, addons = null, cams = null, pwMsg = "", upd = {version: "", check: null, status: null, msg: "", confirm: false, wait: false}, choice = "recalibrate", pathSel = null, err = "";
+const STEPS = ["Printer", "Checks", "Tuning", "Take over"];
+
+const TIPS = {
+  "Cosmos": "The software the Centauri Carbon runs by default.",
+  "Kalico": "The printer-control software that runs on this device once Nebula has taken over. It replaces the printer's own Klipper.",
+  "Moonraker": "The part that lets web pages and apps talk to the printer-control software.",
+  "SSH": "A way for one computer to log in to another over the network. Nebula uses it to set the printer up.",
+  "firmware": "The small program inside a controller chip.",
+  "controller chip": "A small chip that drives one part of the printer, such as the heater bed or the toolhead (MCU).",
+  "port forwarding": "A router setting that makes a device at home reachable from the internet.",
+  "Tailscale": "A private network app that lets you reach home devices safely from outside.",
+  "IP address": "The number that identifies a device on a network, like 192.168.1.50.",
+  "input shaper": "Settings that cancel vibration, so prints stay sharp at speed.",
+  "bed mesh": "A map of how flat the bed is, so the printer can compensate.",
+  "load cell": "The sensor that feels when the nozzle touches the bed.",
+  "PID": "The tuning that keeps a heater at exactly the right temperature.",
+  "bed MCU firmware": "The heater bed has its own small controller chip. Nebula needs it to run the exact program version it was tested with.",
+  "toolhead MCU firmware": "The toolhead (the part with the nozzle) has its own small controller chip. Nebula needs it to run the exact program version it was tested with.",
+  "extruder PID": "The tuning that keeps the nozzle heater at exactly the right temperature.",
+  "Cosmos version": "Cosmos is the software the Centauri Carbon runs by default. Nebula is tested with specific versions.",
+  "printer idle": "Nebula only takes over a printer that is doing nothing: no print running, heaters off."
+};
+const tip = (t, label) => `<span class="tip" tabindex="0" data-tip="${esc(TIPS[t] || t)}">${esc(label || t)}</span>`;
+const more = body => `<details class="more"><summary>More</summary>${body}</details>`;
+
+const PLAIN = {
+  "printer reachable": "Printer found", "Cosmos version": "Printer software version",
+  "bed MCU firmware": "Bed controller", "toolhead MCU firmware": "Toolhead controller",
+  "not already hijacked": "Printer still on its own software", "free space": "Free space on the printer", "printer idle": "Printer is idle",
+  "input shaper": "Vibration tuning", "bed mesh": "Bed flatness map", "load cell": "Touch sensor", "extruder PID": "Nozzle heater tuning"
+};
+const plain = n => TIPS[n] ? tip(n, PLAIN[n] || n) : esc(PLAIN[n] || n);
+const locked = () => ["HIJACKING", "HIJACKED", "RELEASING"].includes(S.phase);
+async function load() { S = await api("state"); await refresh(); if (locked() && !location.hash) step = 3; render(); }
+async function refresh() {
+  if (S.auth !== "ok") return;
+  if (step === 4) { [addons, cams] = await Promise.all([api("addons"), api("cameras")]); await updRefresh(); }
+  [checks, cal, plan] = await Promise.all([api("checks"), api("calibration"), api("plan")]);
+  if (!cal.use_existing_allowed) choice = "recalibrate";
+  if (step === 3) { try { S.cable_boot = (await api("cable-boot")).on; } catch (e) {} }
+}
+
+async function updRefresh() {
+  try { const d = await api("update"); upd.version = d.version; upd.status = d.status; } catch (e) {  }
+}
+const updRunning = () => upd.wait || (upd.status && upd.status.state === "running");
+function updateCard() {
+  const c = upd.check, st = upd.status;
+  let body = "";
+  if (updRunning()) {
+    body = `<div class="note">Updating${st && st.to ? " to " + esc(st.to) : ""}. This page reloads by itself when it is done. The printer is not touched. ${st && st.message ? "<br><span class=\"muted small\">" + esc(st.message) + "</span>" : ""}</div>`;
+  } else if (upd.confirm && c) {
+    body = `<div class="note"><b>Update to ${esc(c.available)}?</b> The panel restarts for a moment and comes back by itself. The printer is not touched. Changes to ${tip("Kalico")} and ${tip("Moonraker")} apply the next time Nebula takes over the printer. If the new version does not start, the old one comes back automatically.</div>
+      <div class="actions"><button class="primary" id="upd-yes">Yes, update</button><button class="ghost" id="upd-no">Cancel</button></div>`;
+  } else {
+    if (c && c.newer) {
+      body = `<p>Version <b>${esc(c.available)}</b> is available${c.released ? " (" + esc(c.released) + ")" : ""}.</p>${c.notes && c.notes.length ? more(`<p>What is new:</p><ul>${c.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>`) : ""}
+        <div class="actions"><button class="primary" id="upd-go">Update now</button><button class="ghost" id="upd-check">Check again</button></div>`;
+    } else {
+      body = `${c ? `<p>You have the newest version.</p>` : ""}<div class="actions"><button class="ghost" id="upd-check">Check for updates</button></div>`;
+    }
+    if (st && (st.state === "done" || st.state === "failed")) {
+      body += `<p class="small ${st.state === "failed" ? "" : "muted"}">${st.state === "failed" ? "The last update did not work: " : "Last update: "}${esc(st.message)} <span class="muted">(${esc(st.at)})</span></p>`;
+    }
+  }
+  return `<div class="card"><h2>Updates</h2>
+  <p class="muted">You have Nebula <b>${esc(upd.version || "…")}</b>. Updates are only looked for when you ask. Nothing is installed without your click, and nothing is installed while a print is running.</p>
+  ${body}<div class="err">${esc(upd.msg)}</div></div>`;
+}
+async function updPoll() {
+  upd.wait = true; render();
+  for (let i = 0; i < 180; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const d = await api("update");
+      upd.status = d.status; upd.version = d.version;
+      if (d.status && d.status.state !== "running") {
+        upd.wait = false; upd.check = null;
+        if (d.status.state === "done") { location.reload(); return; }
+        upd.msg = d.status.message; render(); return;
+      }
+      render();
+    } catch (e) { if (/login/.test(e.message)) { location.reload(); return; }  }
+  }
+  upd.wait = false; upd.msg = "The update is taking long. Reload this page in a minute."; render();
+}
+
+function stepper() {
+  const done = i => (i < step && step < 4) || (locked() && i < 3);
+  return `<div class="steps">${STEPS.map((n, i) => `<button data-step="${i}" class="${i === step ? "on" : ""} ${done(i) ? "done" : ""}"><b>${done(i) ? "done" : "step " + (i + 1)}</b>${n}</button>`).join("")}
+  <button data-step="4" class="extra ${step === 4 ? "on" : ""}"><b>extras</b>Add-ons</button></div>`;
+}
+function head() {
+  const hij = S.phase === "HIJACKED";
+  const busy = S.phase === "HIJACKING" || S.phase === "RELEASING";
+  return `<header><div class="mark">NEB<i>U</i>LA</div><span class="chip ${hij ? "live" : ""}">${busy ? "working..." : hij ? "Nebula is running the printer" : "printer runs its own software"}</span>
+  <span class="sp"></span>${S.demo ? '<span class="chip demo">demo mode: no real printer is touched</span>' : ""}<span class="chip">${esc(S.host.name)} · ${esc(S.host.link)}</span></header>`;
+}
+function demoBar() {
+  if (!S.demo) return "";
+  return `<div class="demo-bar">Scenario: ${S.scenarios.map(n => `<button data-scn="${n}" class="${n === S.scenario ? "on" : ""}">${n}</button>`).join("")}</div>`;
+}
+function logCard() {
+  return `<div class="card"><h3 style="margin-top:0">Activity</h3><div class="log">${S.log.length ? S.log.slice().reverse().map(l => `<div><span>${esc(l.t)}</span>${esc(l.text)}</div>`).join("") : "<div>Nothing yet.</div>"}</div></div>`;
+}
+
+function jobNote() {
+  const j = addons.job;
+  if (!j) return "";
+  const cls = j.state === "error" ? "bad" : j.state === "done" ? "ok" : "";
+  const what = j.state === "running" ? j.label + "..." : j.state === "done" ? j.label + ": done" : j.label + ": failed";
+  return `<div class="note ${cls}"><b>${esc(what)}</b>${j.message ? `<br><span class="small">${esc(j.message)}</span>` : ""}</div>`;
+}
+function addonCard(a) {
+  const busy = addons.job && addons.job.state === "running";
+  const blockers = a.fit.filter(c => !c.ok && c.name !== "Alternatives");
+  const notes = a.fit.filter(c => c.name === "Note");
+  const replaces = a.alternatives.map(id => addons.addons.find(x => x.id === id)).filter(x => x && x.installed).map(x => x.title)[0];
+  const state = a.installed ? `<span class="chip live">installed${a.outdated ? " (update available)" : ""}</span>` : a.recommended ? `<span class="chip">recommended</span>` : "";
+  const open = a.installed && a.category === "web-interface" ? `<a class="ghost" href="http://${esc(location.hostname)}/" target="_blank" rel="noopener">Open</a>` : "";
+  const act = a.installed
+    ? `<button class="ghost" data-addon="remove" data-id="${esc(a.id)}" ${busy ? "disabled" : ""}>Remove</button>${a.outdated ? `<button class="primary" data-addon="install" data-id="${esc(a.id)}" ${busy ? "disabled" : ""}>Update</button>` : ""}`
+    : `<button class="primary" data-addon="install" data-id="${esc(a.id)}" ${busy || blockers.length ? "disabled" : ""}>${replaces ? "Switch to " + esc(a.title) : "Install"}</button>`;
+  return `<div class="choice ${a.installed ? "on" : ""}" style="cursor:default"><b>${esc(a.title)} ${state}</b>
+    <span class="muted small">${esc(a.description)}</span>
+    ${blockers.map(c => `<p class="small" style="color:var(--bad)">${esc(c.name)}: ${esc(c.detail)}</p>`).join("")}
+    ${notes.map(c => `<p class="small muted">${esc(c.detail)}</p>`).join("")}
+    ${replaces && !a.installed ? `<p class="small muted">Replaces ${esc(replaces)}. Your settings and history stay.</p>` : ""}
+    <div class="actions">${act}${open}</div></div>`;
+}
+function cameraRows() {
+  return cams.cameras.map(c => {
+    const where = c.on_host ? `plugged into this device (${esc(c.device)})` : "the printer's own camera, over the cable";
+    return `<div class="row" style="flex-wrap:wrap"><div class="dot ok">✓</div><div class="t" style="flex-basis:200px"><b>${esc(c.name)}</b><span>${where}</span></div>
+      ${c.on_host ? `<button class="danger" data-cam="remove" data-id="${esc(c.id)}">Remove</button>` : ""}</div>`;
+  }).join("");
+}
+function pageAddons() {
+  const web = addons.addons.filter(a => a.category === "web-interface").sort((x, y) => y.recommended - x.recommended);
+  const rest = addons.addons.filter(a => a.category !== "web-interface");
+  const form = cams.crowsnest
+    ? `<h3>Add a camera plugged into this device</h3>
+       <input type="text" id="cam-name" placeholder="Name, for example Nozzle camera" autocomplete="off">
+       <input type="text" id="cam-dev" placeholder="Camera device" value="/dev/video0" autocomplete="off">
+       <div class="actions"><button class="primary" id="cam-add">Add camera</button></div>
+       <p class="muted small">Usually <code>/dev/video0</code>. With several cameras, use the name under <code>/dev/v4l/by-id/</code> instead: it does not change after a restart.</p>`
+    : `<p class="muted small">A camera plugged into this device needs the Crowsnest add-on below.</p>`;
+  return `${jobNote()}
+  <div class="card"><h2>Web interface</h2>
+  <p class="muted">A web page for controlling and watching your printer from any phone or computer at home: temperatures, files, console and camera. Pick Mainsail or Fluidd. Switching later keeps your settings and history.</p>
+  <div class="choices">${web.map(addonCard).join("")}</div>
+  <p class="muted small">Anyone on your home network can open it, with no password. Nothing from the internet can.</p></div>
+  <div class="card"><h2>Cameras</h2>
+  ${cams.web ? "" : `<div class="note">Cameras show up in the web interface, so install one above first.</div>`}
+  ${cameraRows()}
+  <p class="muted small">Same as the web interface: open at home, closed to the internet.</p>
+  ${form}</div>
+  <div class="card"><h2>More add-ons</h2><div class="choices">${rest.map(addonCard).join("")}</div></div>
+  <div class="card"><h2>Account</h2>
+  <p class="muted">The password for this panel.</p>
+  <input type="password" id="pw-cur" placeholder="current password" autocomplete="current-password">
+  <input type="password" id="pw-new" placeholder="new password, at least 8 characters" autocomplete="new-password">
+  <div class="err" id="pw-msg">${esc(pwMsg)}</div>
+  <div class="actions"><button class="ghost" id="pw-go">Change password</button></div>
+</div>
+  ${updateCard()}`;
+}
+
+function authView() {
+  const setup = S.auth === "setup";
+  return `<div class="wrap" style="max-width:420px"><header><div class="mark">NEB<i>U</i>LA</div></header>
+  <div class="card"><h2>${setup ? "Choose a password" : "Sign in"}</h2>
+  <p class="muted small">${setup ? "Choose a password for this panel. You will need it each time you open it. It is stored scrambled, so it cannot be read back." : "Enter the password for this panel."}</p>
+  <input type="password" id="pw" placeholder="${setup ? "at least 8 characters" : "password"}" autofocus>
+  <div class="err" id="err">${esc(err)}</div>
+  <div class="actions"><button class="primary" id="go">${setup ? "Set password" : "Sign in"}</button></div></div>
+  <p class="muted small">This panel only opens on your home network.</p></div>`;
+}
+
+function pageConnect() {
+  const sel = pathSel || S.path;
+  return `<div class="card"><h2>How is the printer connected?</h2>
+  <p class="muted">The USB cable between this device and the printer is always used to run the printer. This question is only about how Nebula first reaches the printer to set it up.</p>
+  <div class="choices">
+   <button class="choice ${sel === "A" ? "on" : ""}" data-path="A"><b>It is on my home network</b><span class="muted small">Wi-Fi or Ethernet. You type in its address.</span></button>
+   <button class="choice ${sel === "B" ? "on" : ""}" data-path="B"><b>Keep it off my network</b><span class="muted small">Everything goes through the USB cable. The printer stays off Wi-Fi and the internet.</span></button>
+  </div>
+  ${sel === "A" ? `<label class="small muted">Printer address (${tip("IP address")})<input type="text" id="addr" placeholder="192.168.1.50" value="${esc(S.address)}"></label>` : ""}
+  ${sel === "B" ? `<div class="note"><b>Before you continue:</b> plug the USB cable into the printer's front USB port and into this device, then switch the printer <b>off and on</b>. The printer only sets up the cable when it starts.${more("<p>This device gives the printer the private address <code>10.78.0.100</code>. The printer has no way to reach anything else.</p>")}</div>` : ""}
+  ${sel && !S.demo ? `<label class="small muted">Printer login (${tip("SSH")}, user root)<input type="text" id="ppw" autocomplete="off" value="${esc(S.printer_password || "")}"></label>
+  <p class="muted small">The printer's own login password. ${tip("Cosmos")} ships with a public one, so it is not really secret. If you changed it on the printer, enter your new one here. Saved on this device.</p>` : ""}
+  <div class="err" id="err">${esc(err)}</div>
+  <div class="actions"><button class="primary" id="next" ${sel ? "" : "disabled"}>Continue</button></div></div>`;
+}
+function pageChecks() {
+  return `<div class="card"><h2>Checks</h2><p class="muted">Looking only. Nothing on the printer is changed.</p>
+  ${checks.checks.map(c => `<div class="row"><div class="dot ${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✕"}</div><div class="t"><b>${plain(c.name)}</b><span>${esc(c.detail)}</span></div></div>`).join("")}
+  ${checks.all_ok ? '<div class="note ok">All good. Nebula is ready to take control from Cosmos.</div>' : '<div class="note bad">Not ready. Fix the items marked ✕ and check again. Nothing has been changed.</div>'}
+  <div class="actions"><button class="ghost" id="again">Check again</button><button class="primary" id="next" ${checks.all_ok ? "" : "disabled"}>Continue</button></div></div>`;
+}
+function pageCal() {
+  return `<div class="card"><h2>Tuning</h2><p class="muted">The tuning your printer has already saved: how it avoids vibration, levels the bed and heats the nozzle. Nebula only reads it.</p>
+  ${cal.parts.map(p => `<div class="row"><div class="dot ${p.ok ? "ok" : "bad"}">${p.ok ? "✓" : "✕"}</div><div class="t"><b>${plain(p.name)}</b><span>${p.ok ? "Already tuned" : "Not tuned yet"}</span>${more(`<p class="small muted">${esc(p.detail)}</p>`)}</div></div>`).join("")}
+  <div class="note ${cal.use_existing_allowed ? "ok" : "bad"}">${esc(cal.message)}</div>
+  <label class="opt"><input type="radio" name="cal" value="recalibrate" ${choice === "recalibrate" ? "checked" : ""}><span><b>Tune again</b> (recommended)<br><span class="muted small">Tune everything again on the new setup.</span></span></label>
+  <label class="opt ${cal.use_existing_allowed ? "" : "off"}"><input type="radio" name="cal" value="existing" ${choice === "existing" ? "checked" : ""} ${cal.use_existing_allowed ? "" : "disabled"}><span><b>Keep the saved tuning</b><br><span class="muted small">${cal.use_existing_allowed ? "Use what the printer has already saved." : "Not available: all four parts must already be tuned."}</span></span></label>
+  <div class="actions"><button class="primary" id="next">Continue</button></div></div>`;
+}
+function pageHijack() {
+  const hij = S.phase === "HIJACKED";
+  const busy = S.phase === "HIJACKING";
+  return `<div class="card"><h2>${busy ? "Taking over control..." : hij ? "Nebula is running the printer" : "Ready to take over control from Cosmos"}</h2>
+  ${busy ? `<p class="muted">Nebula is taking control of the printer from Cosmos. This takes about a minute and the printer's screen goes dark. It may have started by itself if automatic take-over is on.</p>` : ""}
+  ${hij ? `<p>Nebula is running the printer now. "Pass control back to Cosmos" returns the printer to its own software; so does switching the printer off and on.${S.persist ? " Passing control back here also turns automatic take-over off, so the printer stays as it is." : ""}</p>` :
+  `<p class="muted">The printer is idle: nothing is printing and the heaters are off. The checks confirmed it.</p>
+   <h3>What will happen</h3><ol class="plan">${plan.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>`}
+  <h3>Options</h3>
+  <label class="opt"><input type="checkbox" id="persist" ${S.persist ? "checked" : ""}><span><b>Take over again automatically</b><br><span class="muted small">If the connection drops or the printer restarts, this device takes over again as soon as it sees the printer. Off by default. Installs nothing on the printer.</span></span></label>
+  <label class="opt"><input type="checkbox" id="cableboot" ${S.cable_boot ? "checked" : ""}><span><b>Keep the cable ready after a printer restart</b><br><span class="muted small">Off by default. Most people do not need it: the printer normally sets up the cable by itself when it starts.${more("<p>If it ever does not, this adds one small start-up script on the printer that does, so Nebula can still find the printer. The script never starts or stops the printer's own software. Switch it off at any time: the script is removed and the printer is exactly as it came.</p>")}</span></span></label>
+  <div class="err" id="err">${esc(err)}</div>
+  <div class="actions">${busy ? '<button class="primary" disabled>Working...</button>' : hij ? '<button class="danger" id="release">Pass control back to Cosmos</button>' : '<button class="primary" id="hijack">Take over control from Cosmos</button>'}</div></div>`;
+}
+
+const lockNote = '<div class="note">Locked while Nebula is running the printer. Pass control back to Cosmos to change this.</div>';
+function lockedConnect() {
+  return `<div class="card"><h2>Printer</h2>
+  <div class="row"><div class="dot ok">✓</div><div class="t"><b>${S.path === "B" ? "Cable only, printer kept offline" : "Printer on my network"}</b><span>${esc(S.address)}</span></div></div>
+  <div class="row"><div class="dot ok">✓</div><div class="t"><b>Printer login</b><span>saved on this device</span></div></div>${lockNote}</div>`;
+}
+function lockedChecks() {
+
+  const rows = checks.checks.length ? checks.checks.map(c => `<div class="row"><div class="dot ok">✓</div><div class="t"><b>${plain(c.name)}</b><span>${esc(c.detail)}</span></div></div>`).join("")
+    : `<div class="row"><div class="dot ok">✓</div><div class="t"><b>All checks passed</b><span>before the take-over</span></div></div>`;
+  return `<div class="card"><h2>Checks</h2><p class="muted">Checks are paused while Nebula is running the printer.</p>${rows}${lockNote}</div>`;
+}
+function lockedCal() {
+  const rows = cal.parts.map(p => `<div class="row"><div class="dot ${p.ok ? "ok" : "bad"}">${p.ok ? "✓" : "✕"}</div><div class="t"><b>${plain(p.name)}</b><span>${p.ok ? "Already tuned" : "Not tuned yet"}</span>${more(`<p class="small muted">${esc(p.detail)}</p>`)}</div></div>`).join("");
+  const c = cal.choice === "existing" ? "Kept the saved tuning" : cal.choice === "recalibrate" ? "Tuned again" : "chosen before the take-over";
+  return `<div class="card"><h2>Tuning</h2>${rows}<div class="row"><div class="dot ok">✓</div><div class="t"><b>Your choice</b><span>${esc(c)}</span></div></div>${lockNote}</div>`;
+}
+function render() {
+  const app = $("#app");
+  if (S.auth !== "ok") { app.innerHTML = authView(); wireAuth(); return; }
+  const page = step === 4 ? pageAddons() : (locked() && step < 3 ? [lockedConnect, lockedChecks, lockedCal][step] : [pageConnect, pageChecks, pageCal, pageHijack][step])();
+  app.innerHTML = head() + demoBar() + stepper() + page + logCard();
+  wire();
+}
+function wireAuth() {
+  const go = async () => {
+    try { await api(S.auth === "setup" ? "setup" : "login", {password: $("#pw").value}); err = ""; await load(); }
+    catch (e) { err = e.message; $("#err").textContent = err; }
+  };
+  $("#go").onclick = go; $("#pw").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+function wire() {
+  document.querySelectorAll("[data-step]").forEach(b => b.onclick = async () => { step = +b.dataset.step; err = ""; if (step === 4) await refresh(); render(); });
+  const changed = async (call, body) => {
+    try { await api(call, body); pwMsg = ""; } catch (e) { addons.job = {label: "That", state: "error", message: e.message}; render(); return; }
+    await refresh(); render();
+  };
+  document.querySelectorAll("[data-addon]").forEach(b => b.onclick = () => changed("addons/" + b.dataset.addon, {id: b.dataset.id}));
+  document.querySelectorAll("[data-cam=remove]").forEach(b => b.onclick = () => changed("cameras/remove", {id: b.dataset.id}));
+  const camAdd = $("#cam-add"); if (camAdd) camAdd.onclick = () => {
+    const name = $("#cam-name").value.trim(), id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30);
+    changed("cameras/add-host", {id, name, device: $("#cam-dev").value.trim()});
+  };
+  const updCheck = $("#upd-check"); if (updCheck) updCheck.onclick = async () => {
+    upd.msg = ""; upd.confirm = false;
+    updCheck.disabled = true; updCheck.textContent = "Looking...";
+    try { const d = await api("update/check", {}); upd.check = d.check; upd.version = d.version; upd.status = d.status; } catch (e) { upd.msg = e.message; }
+    render();
+  };
+  const updGo = $("#upd-go"); if (updGo) updGo.onclick = () => { upd.confirm = true; render(); };
+  const updNo = $("#upd-no"); if (updNo) updNo.onclick = () => { upd.confirm = false; render(); };
+  const updYes = $("#upd-yes"); if (updYes) updYes.onclick = async () => {
+    upd.msg = ""; upd.confirm = false;
+    try { await api("update/apply", {}); updPoll(); } catch (e) { upd.msg = e.message; render(); }
+  };
+  const pwGo = $("#pw-go"); if (pwGo) pwGo.onclick = async () => {
+    try { await api("password", {current: $("#pw-cur").value, new: $("#pw-new").value}); pwMsg = "Changed."; }
+    catch (e) { pwMsg = e.message; }
+    render();
+  };
+  document.querySelectorAll("[data-scn]").forEach(b => b.onclick = async () => { S = await api("scenario", {name: b.dataset.scn}); await refresh(); render(); });
+  document.querySelectorAll("[data-path]").forEach(b => b.onclick = () => { pathSel = b.dataset.path; render(); });
+  const next = $("#next");
+  if (next) next.onclick = async () => {
+    err = "";
+    try {
+      if (step === 0) { S = await api("connect", {path: pathSel || S.path, address: ($("#addr") || {}).value || ""});
+        const pw = $("#ppw"); if (pw && pw.value && (!S.paired || pw.value !== S.printer_password)) { S = await api("pair", {password: pw.value}); }
+        if (!S.demo && !S.paired) throw new Error("Enter the printer's login password.");
+        await refresh(); }
+      if (step === 2) { const r = document.querySelector("input[name=cal]:checked"); choice = r ? r.value : "recalibrate"; }
+      step++; render();
+    } catch (e) { err = e.message; $("#err").textContent = err; }
+  };
+  const again = $("#again"); if (again) again.onclick = async () => { await refresh(); render(); };
+  document.querySelectorAll("input[name=cal]").forEach(r => r.onchange = () => { choice = r.value; });
+  const per = $("#persist"); if (per) per.onchange = async () => { S = await api("persist", {on: per.checked}); render(); };
+  const cb = $("#cableboot"); if (cb) cb.onchange = async () => {
+    try { S = await api("cable-boot", {on: cb.checked}); err = ""; } catch (e) { err = e.message; cb.checked = !cb.checked; }
+    render();
+  };
+  const hj = $("#hijack"); if (hj) hj.onclick = async () => {
+    try { S = await api("hijack", {calibration: choice}); err = ""; render(); } catch (e) { err = e.message; render(); }
+  };
+  const rl = $("#release"); if (rl) rl.onclick = async () => { S = await api("release", {}); render(); };
+}
+load().catch(e => { document.getElementById("app").textContent = "Cannot reach the panel: " + e.message; });
+
+setInterval(async () => {
+  if (!S || S.auth !== "ok" || document.hidden) return;
+  try {
+    const n = await api("state");
+    const last = x => (x.log.length ? x.log[x.log.length - 1].text : "");
+    const changed = n.phase !== S.phase || n.persist !== S.persist || n.log.length !== S.log.length || last(n) !== last(S) || JSON.stringify(n.job) !== JSON.stringify(S.job);
+    S = n;
+    if (!changed) return;
+    const a = document.activeElement;
+    if (a && a.tagName === "INPUT" && a.type !== "checkbox" && a.type !== "radio") return;
+    await refresh(); render();
+  } catch (e) {  }
+}, 3000);
+</script>
+</body>
+</html>

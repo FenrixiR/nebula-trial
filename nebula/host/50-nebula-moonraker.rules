@@ -1,0 +1,29 @@
+polkit.addRule(function(action, subject) {
+    if (subject.user != "nebula") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    var power = [
+        "org.freedesktop.login1.reboot",
+        "org.freedesktop.login1.reboot-multiple-sessions",
+        "org.freedesktop.login1.power-off",
+        "org.freedesktop.login1.power-off-multiple-sessions"
+    ];
+    if (power.indexOf(action.id) >= 0) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.freedesktop.systemd1.manage-units") {
+        var units = [
+            "nebula-relay-client.service",
+            "nebula-kalico.service",
+            "nebula-moonraker.service",
+            "nebula-panel.service",
+            "nebula-crowsnest.service",
+            "nginx.service"
+        ];
+        var unit = action.lookup("unit");
+        if (unit === undefined || units.indexOf(unit) >= 0) {
+            return polkit.Result.YES;
+        }
+    }
+    return polkit.Result.NOT_HANDLED;
+});

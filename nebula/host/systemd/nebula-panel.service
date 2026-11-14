@@ -1,0 +1,14 @@
+[Unit]
+Description=Nebula panel (/nebula) and auto-hijack watcher
+After=network.target centauri-usb-gadget.service dnsmasq.service
+Wants=centauri-usb-gadget.service
+
+[Service]
+User=nebula
+WorkingDirectory=/home/nebula/host
+ExecStart=/usr/bin/python3 -m nebula.panel.server --port 8080 --real --state /home/nebula/.nebula
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

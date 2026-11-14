@@ -1,0 +1,33 @@
+[addon]
+id = "internet-block"
+title = "Block the internet"
+description = "Makes this device refuse anything that comes in from the internet, even if someone sets up port forwarding on the router. Your home network, VPNs and Tailscale still work."
+category = "security"
+recommended = true
+version = "1"
+
+[needs]
+ram_mb = 5
+disk_mb = 5
+packages = ["nftables"]
+
+[files.rules]
+source = "nebula-block.nft"
+sha256 = "270fcca51ef8602593cf281b7165805390d75a0918d6fcb6c98f50cbe912c0fe"
+dest = "/etc/nebula/nebula-block.nft"
+mode = "0644"
+
+[files.unit]
+source = "nebula-block.service"
+sha256 = "a48ac75257beb2a6d467fab0b0a33f59fccf83fea7d6efbc7dc0ecccbbd0c88d"
+dest = "/etc/systemd/system/nebula-block.service"
+mode = "0644"
+
+[services]
+units = ["nebula-block.service"]
+
+[check]
+test = ["/usr/sbin/nft", "-c", "-f", "/etc/nebula/nebula-block.nft"]
+
+[remove]
+keeps = ["the nftables package"]

@@ -1,0 +1,25 @@
+# Factory values for settings that calibration overwrites. They cannot live in machine/*.cfg,
+# because SAVE_CONFIG refuses to store an option that is also written by hand in an included file.
+# On a fresh install, append this block to the end of printer.cfg (after the user section).
+# Values are the Cosmos factory defaults; the uncalibrated markers (71000 tare, 24.860427 Kp) are
+# what the Cosmos CHECK_CALIBRATION macro looks for.
+
+#*# <---------------------- SAVE_CONFIG ---------------------->
+#*# DO NOT EDIT THIS BLOCK OR BELOW. The contents are auto-generated.
+#*#
+#*# [load_cell_probe]
+#*# reference_tare_counts = 71000, 71000, 71000, 71000
+#*# z_offset = 0.0
+#*#
+#*# [extruder]
+#*# pid_kp = 24.860427
+#*# pid_ki = 2.702253
+#*# pid_kd = 57.178292
+#*#
+#*# [heater_bed]
+#*# pid_kp = 46.504839
+#*# pid_ki = 1.453276
+#*# pid_kd = 372.038710
+#*#
+#*# [stepper_z]
+#*# position_endstop = 4

@@ -1,0 +1,14 @@
+[Unit]
+Description=Nebula internet block
+Before=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nebula/nebula-block.nft
+ExecReload=/usr/sbin/nft -f /etc/nebula/nebula-block.nft
+ExecStop=/usr/sbin/nft delete table inet nebula_block
+
+[Install]
+WantedBy=multi-user.target

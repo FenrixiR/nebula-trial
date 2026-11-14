@@ -1,0 +1,37 @@
+[addon]
+id = "fluidd"
+title = "Fluidd"
+description = "Another dashboard with the same basic features in a different style. Opens in any browser on your home network."
+category = "web-interface"
+group = "web-interface"
+version = "1.37.7"
+
+[needs]
+ram_mb = 20
+disk_mb = 60
+packages = ["nginx"]
+
+[download.fluidd]
+url = "https://github.com/fluidd-core/fluidd/releases/download/v1.37.7/fluidd.zip"
+sha256 = "e45889071dae4e79f22e38bfb28cad0ce0c89e134c09d174cd447c4c93bd9556"
+dest = "/var/www/fluidd"
+
+[files.site]
+source = "nebula-fluidd.conf"
+sha256 = "377c8023b9b56dccb3b8471e21efe56eab8be058ab84297756d39a527112240b"
+dest = "/etc/nginx/sites-enabled/nebula-fluidd.conf"
+mode = "0644"
+
+[services]
+reload = ["nginx"]
+
+[displace]
+paths = ["/etc/nginx/sites-enabled/default"]
+
+[check]
+test = ["nginx", "-t"]
+url = "http://127.0.0.1/"
+status = 200
+
+[remove]
+keeps = ["Moonraker settings, history and users", "the nginx package"]

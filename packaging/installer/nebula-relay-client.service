@@ -1,0 +1,12 @@
+[Unit]
+Description=Nebula: virtual serial ports to the printer's MCUs (relay client)
+After=network.target
+
+[Service]
+User=nebula
+ExecStart=/home/nebula/bin/centauri-link pty \
+    mainboard=10.78.0.100:7001@/home/nebula/printer_data/comms/mcu-mainboard \
+    bed=10.78.0.100:7002@/home/nebula/printer_data/comms/mcu-bed \
+    toolhead=10.78.0.100:7003@/home/nebula/printer_data/comms/mcu-toolhead
+Restart=always
+RestartSec=2
