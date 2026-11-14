@@ -34,4 +34,4 @@ To remove everything Nebula put on the host and on the printer: `sudo nebula-uni
 
 ## Licence
 
-GPL-3.0, see `LICENSE` and `NOTICE.md`. No warranty: you are changing how your printer is controlled, so read what the installer says before you confirm.
+Copyright (c) 2026 Fenleigh 'FenrixiЯ' Åkerholm. GPL-3.0, see `LICENSE` and `NOTICE.md`. No warranty: you are changing how your printer is controlled, so read what the installer says before you confirm.

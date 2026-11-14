@@ -121,10 +121,11 @@ printing() {
 
 package() {
     local name=nebula-linux-$(machine).tar.gz
-    say "Downloading Nebula $(json_field "$TMP/latest.json" version 2> /dev/null || echo) for $(machine) ..."
+    say "Downloading Nebula for $(machine) ..."
     fetch "$name" "$TMP/$name"
+    [ -s "$TMP/latest.json" ] || fetch latest.json "$TMP/latest.json"
     verify "$TMP"
-    say "Download verified."
+    say "Download verified: Nebula $(json_field "$TMP/latest.json" version 2> /dev/null || echo)."
     mkdir "$TMP/pkg"
     tar xzf "$TMP/$name" -C "$TMP/pkg"
 }

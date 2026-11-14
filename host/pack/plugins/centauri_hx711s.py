@@ -1,8 +1,9 @@
 # Multi-Sensor HX711 and HX717 Support (OpenCentauri), packaged as a Kalico plugin
 #
 # Source: OpenCentauri/kalico, klippy/extras/load_cell/hx711s.py (James Turton), unchanged apart from
-# absolute imports and the register_components() hook at the bottom, which adds the 'hx711s' and
-# 'hx717s' sensor types to upstream's load cell without touching upstream files.
+# absolute imports, the register_components() hook at the bottom (which adds the 'hx711s' and
+# 'hx717s' sensor types to upstream's load cell without touching upstream files) and an alias that
+# lets Kalico's tap analysis find motion_report.trapqs. Modified 2026-10 and 2026-11.
 #
 # Copyright (C) 2026 James Turton <james.turton@gmx.com>
 # Original HX711 driver Copyright (C) 2024 Gareth Farrington <gareth@waves.ky>
