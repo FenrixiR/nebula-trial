@@ -101,6 +101,8 @@ make_user() {
     step "Setting up the '$USER_NAME' user"
     if ! id "$USER_NAME" > /dev/null 2>&1; then
         useradd --create-home --shell /bin/bash --groups dialout,plugdev "$USER_NAME"
+        install -d "$R/var/lib/nebula"
+        : > "$R/var/lib/nebula/created-user"
     fi
     install -d -o "$USER_NAME" -g "$USER_NAME" "$HOME_DIR/printer_data"
     install -d -o "$USER_NAME" -g "$USER_NAME" "$HOME_DIR/bin" "$HOME_DIR/host" \
@@ -315,9 +317,16 @@ rollback() {
     die "the update did not start, so the previous version was restored (details: journalctl -u nebula-panel)"
 }
 
+lan_address() {
+    local a
+    a=$(ip -4 route get 1.1.1.1 2> /dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") { print $(i + 1); exit }}')
+    [ -n "$a" ] || a=$(hostname -I 2> /dev/null | tr ' ' '\n' | grep -v -E '^(10\.78\.0\.|127\.|169\.254\.)' | head -n 1)
+    echo "$a"
+}
+
 finish() {
     local ip w
-    ip=$(hostname -I 2> /dev/null | awk '{print $1}')
+    ip=$(lan_address)
     printf '\n'
     local healthy=1
     if [ -z "${NEBULA_TEST:-}" ] || [ "$UPDATING" -eq 1 ]; then
@@ -335,17 +344,22 @@ finish() {
     if [ "$UPDATING" -eq 1 ]; then
         say "Open the panel:  http://${ip:-this-machine}:8080/nebula/"
     else
-        local n=1
         say
         say "Next:"
+        say "  1. Connect the USB cable between this machine and the printer's front USB port."
+        say "  2. Restart both ends of the cable (the printer only sets up its end when it starts):"
         if [ "$NEED_REBOOT" -eq 1 ]; then
-            say "  $n. Restart this machine, to switch on the USB cable port:  sudo reboot"
-            n=$((n + 1))
+            say "     - if this machine is powered from the printer's USB port: switch the printer off and on."
+            say "       That restarts this machine too, which is needed now to switch on the USB cable port."
+            say "     - if it has its own power supply: run  sudo reboot  here, then switch the printer off and on."
+        else
+            say "     Switch the printer off and on once. A machine powered from the printer's USB port restarts with it."
         fi
-        say "  $n. Connect the USB cable between this machine and the printer, then switch the printer off and on once."
-        say "     The printer only sets up its end of the cable when it starts."
-        n=$((n + 1))
-        say "  $n. Open the panel:  http://${ip:-this-machine}:8080/nebula/"
+        say "  3. Open the panel:  http://${ip:-this-machine}:8080/nebula/"
+        say "     This address comes from your router (DHCP) and can change; reserve it in the router to keep it fixed."
+        if systemctl is-active --quiet avahi-daemon 2> /dev/null; then
+            say "     This machine is also reachable as  http://$(hostname).local:8080/nebula/"
+        fi
     fi
     say
     say "To remove Nebula again:  sudo nebula-uninstall"

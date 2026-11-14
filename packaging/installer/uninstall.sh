@@ -5,6 +5,7 @@ R=${NEBULA_ROOT:-}
 USER_NAME=nebula
 HOME_DIR=$R/home/$USER_NAME
 KEEP_DATA=0
+CREATED_USER=0
 ASSUME_YES=0
 WARNINGS=()
 
@@ -29,8 +30,10 @@ confirm() {
     say "  - remove the Nebula services, add-ons and system rules from this machine"
     if [ "$KEEP_DATA" -eq 1 ]; then
         say "  - keep /home/$USER_NAME/.nebula and /home/$USER_NAME/printer_data (settings, tuning, config, history)"
-    else
+    elif [ "$CREATED_USER" -eq 1 ]; then
         say "  - delete the '$USER_NAME' user with all its files: settings, tuning, Kalico config, print history"
+    else
+        say "  - delete Nebula's settings, tuning, Kalico config and print history in /home/$USER_NAME (the account itself stays: it was here before Nebula)"
     fi
     say "System packages that were installed for Nebula (git, python tools, dnsmasq, ...) stay; other things may use them."
     local answer
@@ -93,6 +96,13 @@ files() {
         "$HOME_DIR/klippy-env" "$HOME_DIR/moonraker-env" "$HOME_DIR/centauri-pack" "$HOME_DIR/bin"
     if [ "$KEEP_DATA" -eq 1 ]; then
         say "kept: $HOME_DIR/.nebula and $HOME_DIR/printer_data"
+        if [ "$CREATED_USER" -eq 1 ]; then
+            install -d "$R/var/lib/nebula"
+            : > "$R/var/lib/nebula/created-user"
+        fi
+    elif [ "$CREATED_USER" -ne 1 ]; then
+        drop "$HOME_DIR/.nebula" "$HOME_DIR/printer_data"
+        say "kept the '$USER_NAME' account and your own files in $HOME_DIR: it was here before Nebula"
     elif id "$USER_NAME" > /dev/null 2>&1; then
         pkill -KILL -u "$USER_NAME" || true
         sleep 1
@@ -116,6 +126,7 @@ main() {
         esac
     done
     [ "$(id -u)" -eq 0 ] || die "run this as root: sudo nebula-uninstall"
+    [ -f "$R/var/lib/nebula/created-user" ] && CREATED_USER=1
     confirm
     printer
     addons

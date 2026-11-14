@@ -139,6 +139,16 @@ gone $SYSTEM_FILES $H /usr/local/sbin/nebula-uninstall
 ok "uninstall through the loader: everything gone, user removed"
 
 bash /w/dist/install.sh --uninstall --yes > /tmp/un3.log 2>&1 && fail "uninstall without an install succeeded"
+
+useradd --create-home --shell /bin/bash nebula
+echo mine > /home/nebula/mine.txt
+bash /w/dist/install.sh --yes > /tmp/run5.log 2>&1 || { tail -20 /tmp/run5.log; fail "install over an existing nebula account"; }
+[ ! -f /var/lib/nebula/created-user ] || fail "the account was not made by the installer but is marked as made by it"
+bash /w/dist/install.sh --uninstall --yes > /tmp/un4.log 2>&1 || { tail -20 /tmp/un4.log; fail "uninstall with a pre-existing account"; }
+id nebula > /dev/null 2>&1 || fail "a pre-existing account was removed"
+[ "$(cat /home/nebula/mine.txt)" = mine ] || fail "the account's own files were removed"
+gone $SYSTEM_FILES $H/host $H/.nebula $H/printer_data
+ok "uninstall keeps an account that was there before Nebula, and its files"
 grep -q 'not installed' /tmp/un3.log || fail "message for nothing to remove"
 ok "uninstall with nothing installed says so"
 echo ALL-OK
