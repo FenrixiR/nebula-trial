@@ -197,6 +197,22 @@ config() {
     chown -R "$USER_NAME:$USER_NAME" "$cfg"
 }
 
+dwc2_state() {
+    awk '
+        /^[ \t]*\[.*\]/ { sec = $0; gsub(/\[|\]|[ \t]/, "", sec); next }
+        (sec == "" || sec == "all" || sec == "pi02") && /^dtoverlay=dwc2([, \t]|$)/ { st = ($0 ~ /dr_mode=host/) ? "host" : "peripheral" }
+        END { print (st == "" ? "none" : st) }
+    ' "$1"
+}
+
+dwc2_host_off() {
+    awk '
+        /^[ \t]*\[.*\]/ { sec = $0; gsub(/\[|\]|[ \t]/, "", sec) }
+        (sec == "" || sec == "all" || sec == "pi02") && /^dtoverlay=dwc2([, \t]|$)/ && /dr_mode=host/ { print "#" $0; next }
+        { print }
+    ' "$1" > "$1.nebula-new" && cat "$1.nebula-new" > "$1" && rm -f "$1.nebula-new"
+}
+
 boot_settings() {
     step "USB cable link"
     install -d "$R/etc/modules-load.d"
@@ -204,8 +220,11 @@ boot_settings() {
     local conf= c
     for c in "$R/boot/firmware/config.txt" "$R/boot/config.txt"; do [ -f "$c" ] && { conf=$c; break; }; done
     if is_raspberry_pi && [ -n "$conf" ]; then
-        if ! grep -qE '^dtoverlay=dwc2' "$conf"; then
+        local dwc2
+        dwc2=$(dwc2_state "$conf")
+        if [ "$dwc2" != peripheral ]; then
             cp "$conf" "$conf.nebula-backup"
+            [ "$dwc2" = host ] && dwc2_host_off "$conf"
             if grep -q '^\[all\]' "$conf"; then
                 sed -i '0,/^\[all\]/s//[all]\ndtoverlay=dwc2/' "$conf"
             else

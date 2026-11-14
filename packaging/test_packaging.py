@@ -53,6 +53,33 @@ class ReleaseTest(unittest.TestCase):
         for bad in ("test_", "__pycache__", "live-snapshots", "proposals", "centauri-link-aarch64", "build_payload", "nebula/README", "helixscreen-cc1"):
             self.assertNotIn(bad, joined)
 
+    def dwc2(self, text, fn="dwc2_state"):
+        with tempfile.TemporaryDirectory() as d:
+            funcs = os.path.join(d, "f.sh")
+            with open(os.path.join(REPO, "packaging/installer/setup.sh")) as f:
+                src = f.read()
+            with open(funcs, "w") as f:
+                f.write(re.search(r"^dwc2_state\(\).*?^}\n\ndwc2_host_off\(\).*?^}\n", src, re.S | re.M).group(0))
+            cfg = os.path.join(d, "config.txt")
+            with open(cfg, "w") as f:
+                f.write(text)
+            r = run(["bash", "-c", f'. "{funcs}"; {fn} "{cfg}"'])
+            self.assertEqual(r.returncode, 0, r.stderr)
+            with open(cfg) as f:
+                return r.stdout.strip(), f.read()
+
+    def test_the_stock_pi_config_does_not_count_as_usb_device_mode(self):
+        stock = "otg_mode=1\n[all]\n[pi4]\narm_boost=1\n[cm5]\ndtoverlay=dwc2,dr_mode=host\n[all]\n"
+        self.assertEqual(self.dwc2(stock)[0], "none")
+        self.assertEqual(self.dwc2(stock + "dtoverlay=dwc2\n")[0], "peripheral")
+        self.assertEqual(self.dwc2("dtoverlay=dwc2,dr_mode=otg\n")[0], "peripheral")
+
+    def test_an_active_host_mode_overlay_is_found_and_commented_out(self):
+        text = "[all]\ndtoverlay=dwc2,dr_mode=host\n[cm5]\ndtoverlay=dwc2,dr_mode=host\n"
+        self.assertEqual(self.dwc2(text)[0], "host")
+        state, fixed = self.dwc2(text, "dwc2_host_off")
+        self.assertEqual(fixed, "[all]\n#dtoverlay=dwc2,dr_mode=host\n[cm5]\ndtoverlay=dwc2,dr_mode=host\n")
+
     def test_the_screen_download_pin_matches_every_manifest(self):
         import tomllib
         with open(os.path.join(REPO, "packaging/installer/pins.env")) as f:
